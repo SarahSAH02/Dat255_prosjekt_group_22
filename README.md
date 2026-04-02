@@ -21,11 +21,6 @@ Our goal is not only to achieve high predictive performance, but to develop a **
 - ✅ Predictive uncertainty estimation  
 - ✅ Visual explainability methods  
 
----
-
-## 🎯 Research Objective
-
-> Can multi-label chest X-ray classification be made more reliable by combining strong CNN architectures with uncertainty estimation (MC Dropout) and explainability (Grad-CAM)?
 
 ---
 
