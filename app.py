@@ -24,14 +24,19 @@ class SimpleCNN(nn.Module):
 
 #Load CNN
 model_cnn = SimpleCNN()
-model_cnn.load_state_dict(torch.load("models/best_model_cnn.pth"))
+model_cnn.load_state_dict(torch.load("models/best_model_cnn.pth", map_location=torch.device('cpu')))
 model_cnn.eval()
 
 #Load ResNet18
-model_resnet = models.resnet18()
-model_resnet.load_state_dict(torch.load("models/best_model_resnet.pth"))
+def get_resnet():
+    model = models.resnet18()
+    model.fc = nn.Linear(model.fc.in_features, 14)  # Change to 14 classes
+    return model
+
+model_resnet = get_resnet()
+model_resnet.load_state_dict(torch.load("models/best_model_resnet.pth", map_location=torch.device('cpu')))
 model_resnet.eval()
 
-st.set_page_config(page_title="Keras Image Classifier", page_icon="🖼️")
-st.title("Image classifier")
-st.write("Upload an image or click an example.")
+st.set_page_config(page_title="Disease detection in X-ray", page_icon="🖼️")
+st.title("Disease detection for X-ray")
+st.write("Upload an image")
