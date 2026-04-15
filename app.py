@@ -4,6 +4,10 @@ import torchvision.models as models
 import torchvision.transforms as transforms
 import streamlit as st
 from PIL import Image
+import numpy as np
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
 LABELS = [
     "No Finding", "Enlarged Cardiomediastinum", "Cardiomegaly",
@@ -37,15 +41,15 @@ def get_resnet():
 
 @st.cache_resource
 def load_models():
-  cnn = SimpleCNN()
-  cnn.load_state_dict(torch.load("models/best_model_cnn.pth", map_location=torch.device('cpu')))
-  cnn.eval()
+    cnn = SimpleCNN()
+    cnn.load_state_dict(torch.load("models/best_model_cnn.pth", map_location=torch.device('cpu')))
+    cnn.eval()
 
-  resnet = get_resnet()
-  resnet.load_state_dict(torch.load("models/best_model_resnet.pth", map_location=torch.device('cpu')))
-  resnet.eval()
+    resnet = get_resnet()
+    resnet.load_state_dict(torch.load("models/best_model_resnet.pth", map_location=torch.device('cpu')))
+    resnet.eval()
 
-  return cnn, resnet
+    return cnn, resnet
 
 def preprocess(image):
     transform = transforms.Compose([
@@ -58,10 +62,24 @@ def preprocess(image):
 
 def predict(model, tensor):
     with torch.no_grad():
-      outputs = torch.sigmoid(model(tensor))
+        outputs = torch.sigmoid(model(tensor))
     return outputs.squeeze().numpy()
-    
-#Streamlit    
+
+def get_gradcam(model, tensor, raw_image, target_class=0):
+    if type(model).__name__=="SimpleCNN":
+        target_layers = [model.conv[-1]]
+    else:
+        target_layers = [model.layer4[-1]]
+
+    cam = GradCAM(model=model, target_layers=target_layers)
+    targets = [ClassifierOutputTarget(target_class)]
+    grayscale_cam = cam(input_tensor=tensor, targets=targets)[0]
+
+    raw = np.array(raw_image.resize((224, 224))).astype(np.float32) / 255.0
+    visualization = show_cam_on_image(raw, grayscale_cam, use_rgb=True)
+    return Image.fromarray(visualization)
+
+# Streamlit
 st.set_page_config(page_title="Disease detection for chest X-ray", layout="wide")
 st.title("Disease detection for chest X-ray")
 st.write("Upload a chest x-ray and get a diagnosis")
@@ -73,25 +91,40 @@ diagnose = st.button("Click to diagnose")
 uploaded_file = st.file_uploader("Upload x-ray image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file and diagnose:
+    image = Image.open(uploaded_file).convert("RGB")
+    tensor = preprocess(image)
+
+    preds_cnn = predict(model_cnn, tensor) if model_choice in ["CNN", "Both"] else None
+    preds_resnet = predict(model_resnet, tensor) if model_choice in ["ResNet18", "Both"] else None
+
     col1, col2 = st.columns(2)
+
     with col1:
-      image = Image.open(uploaded_file).convert("RGB")
-      st.image(image, caption="Uploaded x-ray", use_container_width=True)
+        st.image(image, caption="Uploaded x-ray", width='stretch')
+
+        if model_choice in ["CNN", "Both"]:
+            top_class_cnn = int(np.argmax(preds_cnn))
+            gradcam_image = get_gradcam(model_cnn, tensor, image, target_class=top_class_cnn)
+            st.subheader("Grad-CAM Heatmap (CNN)")
+            st.image(gradcam_image, caption=f"Focus area for: {LABELS[top_class_cnn]}", width='stretch')
+
+        if model_choice in ["ResNet18", "Both"]:
+            top_class_resnet = int(np.argmax(preds_resnet))
+            gradcam_image = get_gradcam(model_resnet, tensor, image, target_class=top_class_resnet)
+            st.subheader("Grad-CAM Heatmap (ResNet18)")
+            st.image(gradcam_image, caption=f"Focus area for: {LABELS[top_class_resnet]}", width='stretch')
 
     with col2:
-      tensor = preprocess(image)
-      st.subheader("Results")
+        st.subheader("Results")
 
-      if model_choice in ["CNN", "Both"]:
-        preds = predict(model_cnn, tensor)
-        st.markdown("<p style='font-size:20px'><b>CNN Model:</b></p>", unsafe_allow_html=True)
-        sorted_results = sorted(zip(LABELS, preds), key=lambda x: x[1], reverse=True)
-        for label, score in sorted_results:
-            st.markdown(f"<p style='font-size:17px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
+        if model_choice in ["CNN", "Both"]:
+            st.markdown("<p style='font-size:20px'><b>CNN Model:</b></p>", unsafe_allow_html=True)
+            sorted_results = sorted(zip(LABELS, preds_cnn), key=lambda x: x[1], reverse=True)
+            for label, score in sorted_results:
+                st.markdown(f"<p style='font-size:18px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
 
-      if model_choice in ["ResNet18", "Both"]:
-        preds = predict(model_resnet, tensor)
-        st.markdown("<p style='font-size:20px'><b>ResNet18 Model:</b></p>", unsafe_allow_html=True)
-        sorted_results = sorted(zip(LABELS, preds), key=lambda x: x[1], reverse=True)
-        for label, score in sorted_results:
-            st.markdown(f"<p style='font-size:17px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
+        if model_choice in ["ResNet18", "Both"]:
+            st.markdown("<p style='font-size:20px'><b>ResNet18:</b></p>", unsafe_allow_html=True)
+            sorted_results = sorted(zip(LABELS, preds_resnet), key=lambda x: x[1], reverse=True)
+            for label, score in sorted_results:
+                st.markdown(f"<p style='font-size:18px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
