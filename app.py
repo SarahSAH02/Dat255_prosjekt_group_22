@@ -1,9 +1,17 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
+import torchvision.transforms as transforms
 import streamlit as st
+from PIL import Image
 
-# Your custom CNN architecture
+LABELS = [
+    "No Finding", "Enlarged Cardiomediastinum", "Cardiomegaly",
+    "Lung Opacity", "Lung Lesion", "Edema", "Consolidation",
+    "Pneumonia", "Atelectasis", "Pneumothorax", "Pleural Effusion",
+    "Pleural Other", "Fracture", "Support Devices"
+]
+
 class SimpleCNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -22,21 +30,68 @@ class SimpleCNN(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
-#Load CNN
-model_cnn = SimpleCNN()
-model_cnn.load_state_dict(torch.load("models/best_model_cnn.pth", map_location=torch.device('cpu')))
-model_cnn.eval()
-
-#Load ResNet18
 def get_resnet():
     model = models.resnet18()
-    model.fc = nn.Linear(model.fc.in_features, 14)  # Change to 14 classes
+    model.fc = nn.Linear(model.fc.in_features, 14)
     return model
 
-model_resnet = get_resnet()
-model_resnet.load_state_dict(torch.load("models/best_model_resnet.pth", map_location=torch.device('cpu')))
-model_resnet.eval()
+@st.cache_resource
+def load_models():
+  cnn = SimpleCNN()
+  cnn.load_state_dict(torch.load("models/best_model_cnn.pth", map_location=torch.device('cpu')))
+  cnn.eval()
 
-st.set_page_config(page_title="Disease detection in X-ray", page_icon="🖼️")
-st.title("Disease detection for X-ray")
-st.write("Upload an image")
+  resnet = get_resnet()
+  resnet.load_state_dict(torch.load("models/best_model_resnet.pth", map_location=torch.device('cpu')))
+  resnet.eval()
+
+  return cnn, resnet
+
+def preprocess(image):
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406],
+                             [0.229, 0.224, 0.225])
+    ])
+    return transform(image).unsqueeze(0)
+
+def predict(model, tensor):
+    with torch.no_grad():
+      outputs = torch.sigmoid(model(tensor))
+    return outputs.squeeze().numpy()
+    
+#Streamlit    
+st.set_page_config(page_title="Disease detection for chest X-ray", layout="wide")
+st.title("Disease detection for chest X-ray")
+st.write("Upload a chest x-ray and get a diagnosis")
+
+model_cnn, model_resnet = load_models()
+
+model_choice = st.radio("Choose model:", ["CNN", "ResNet18", "Both"])
+diagnose = st.button("Click to diagnose")
+uploaded_file = st.file_uploader("Upload x-ray image", type=["jpg", "jpeg", "png"])
+
+if uploaded_file and diagnose:
+    col1, col2 = st.columns(2)
+    with col1:
+      image = Image.open(uploaded_file).convert("RGB")
+      st.image(image, caption="Uploaded x-ray", use_container_width=True)
+
+    with col2:
+      tensor = preprocess(image)
+      st.subheader("Results")
+
+      if model_choice in ["CNN", "Both"]:
+        preds = predict(model_cnn, tensor)
+        st.markdown("<p style='font-size:20px'><b>CNN Model:</b></p>", unsafe_allow_html=True)
+        sorted_results = sorted(zip(LABELS, preds), key=lambda x: x[1], reverse=True)
+        for label, score in sorted_results:
+            st.markdown(f"<p style='font-size:17px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
+
+      if model_choice in ["ResNet18", "Both"]:
+        preds = predict(model_resnet, tensor)
+        st.markdown("<p style='font-size:20px'><b>ResNet18 Model:</b></p>", unsafe_allow_html=True)
+        sorted_results = sorted(zip(LABELS, preds), key=lambda x: x[1], reverse=True)
+        for label, score in sorted_results:
+            st.markdown(f"<p style='font-size:17px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
