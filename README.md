@@ -57,6 +57,16 @@ Følgende resultater ble oppnådd med vår optimaliserte ResNet-18 modell etter 
 ### Grad-CAM Visualisering
 Vi benytter **Grad-CAM (Gradient-weighted Class Activation Mapping)** for å generere varmekart. Dette gjør det mulig å verifisere at modellen fokuserer på de anatomisk korrekte områdene i lungene, noe som er essensielt for medisinsk tillit.
 
+
+Varmekartene bekrefter at modellen har lært å lokalisere patologier i lungefeltene, i stedet for å basere seg på bakgrunnsstøy eller artefakter.
+
+| Pleural Effusion (Væske i lungene) | Pneumonia (Lungebetennelse) |
+| :---: | :---: |
+| ![Pleural Effusion](Pleural%20effusion.png) | ![Pneumonia](phen.png) |
+| *Modellen fokuserer korrekt på væskeansamling nederst i lungeposen (kostofrenisk vinkel).* | *Varmekartet lokaliserer et fortettet område (infiltrat) i midtre lungefelt.* |
+
+---
+
 ### Usikkerhetsestimering (MC Dropout)
 For å unngå "overconfident" feilprediksjoner, utforsket vi **Monte Carlo Dropout** på baseline-modellen. Ved å beholde dropout aktiv under prediksjon, kan vi beregne et standardavvik som indikerer hvor usikker modellen er på diagnosen den stiller.
 
