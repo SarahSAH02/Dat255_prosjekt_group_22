@@ -1,77 +1,69 @@
-# DAT255 – Reliable Multi-Label Chest X-ray Classification
+# Multi-Label Classification of Chest X-rays with Uncertainty Exploration
 
-Deep learning for medical image analysis with uncertainty estimation and explainability.
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 
-## 👥 Team
-- Astrid I. Bensnes  
-- Mannat Gabria  
-- Amna Zafar  
-- Sarah S. Ahsan  
+Dette prosjektet utforsker bruken av dyplæring for automatisert diagnostisering av thorax-patologier fra røntgenbilder. Ved å kombinere moderne nevrale nettverk (ResNet-18) med metoder for usikkerhetsestimering og visuell forklarbarhet, har vi utviklet et system som gir dypere innsikt i AI-basert diagnostikk.
 
----
-
-## 📌 Project Overview
-
-This project investigates multi-label classification of chest X-ray images using deep learning.  
-Unlike traditional single-class classification, a chest X-ray may contain multiple co-existing pathologies.  
-
-Our goal is not only to achieve high predictive performance, but to develop a **reliable and transparent medical AI system** by integrating:
-
-- ✅ High-performance CNN architectures  
-- ✅ Predictive uncertainty estimation  
-- ✅ Visual explainability methods  
-
+## 👥 Prosjektgruppe
+- Astrid I. Bensnes
+- Mannat Gabria
+- Amna Zafar
+- Sarah S. Ahsan
 
 ---
 
-## 📊 Dataset
+## 📊 Datasett og Metodikk
 
-We use the **CheXpert dataset** from Stanford ML Group:
+### Datakilde (Kaggle)
+Vi har benyttet en kuratert versjon av **CheXpert**-datasettet fra **Kaggle** (`ashery/chexpert`). Dette ble valgt for å sikre sømløs integrasjon med Google Colab og for å utnytte en optimalisert filstruktur for bildebehandling.
 
-https://stanfordmlgroup.github.io/competitions/chexpert
-
-CheXpert is a large-scale dataset of labeled chest X-rays containing multiple thoracic pathologies.
-
-⚠️ The dataset is **not included** in this repository due to licensing restrictions.
-
----
-
-## 🧠 Models
-
-### 1️⃣ ResNet (Baseline)
-A standard convolutional neural network architecture used as our baseline model.
-
-### 2️⃣ EfficientNet
-A more advanced architecture designed for improved performance and parameter efficiency.
-
-We compare models using:
-- ROC-AUC (per label)
-- Macro and Micro F1-score
-- Precision / Recall
+### Oppsplitting av data
+For å sikre en valid evaluering ble datasettet splittet slik at ingen pasient-ID-er overlapper mellom settene:
+* **Treningssett (80%):** Brukt til modelltrening og vektoppdatering.
+* **Valideringssett (10%):** Brukt til hyperparameter-tuning og terskel-optimalisering.
+* **Testsett (10%):** Brukt for den endelige, objektive evalueringen.
 
 ---
 
-## 📈 Uncertainty Estimation – MC Dropout
+## 🧠 Modellarkitektur
 
-To improve model reliability in a medical context, we apply **Monte Carlo Dropout** during inference.
+Vi har implementert og sammenlignet to ulike tilnærminger:
 
-This allows us to:
-- Estimate predictive uncertainty
-- Analyze the relationship between uncertainty and misclassification
-- Investigate model calibration
-
-Uncertainty is critical in medical AI to avoid overconfident incorrect predictions.
+1.  **SimpleCNN (Baseline):** En egenutviklet arkitektur med to konvolusjonelle lag. Denne fungerer som et sammenligningsgrunnlag og ble brukt til å utforske **Monte Carlo Dropout** for usikkerhetsestimering.
+2.  **ResNet-18 (Hovedmodell):** Et dypt rest-nettverk som utnytter **Transfer Learning** fra ImageNet. Denne modellen håndterer multi-label klassifiseringen ved bruk av `BCEWithLogitsLoss`.
 
 ---
 
-## 🔥 Explainability – Grad-CAM
+## 📈 Resultater
 
-We use **Grad-CAM** to generate heatmaps that highlight image regions contributing to model predictions.
+Følgende resultater ble oppnådd med vår optimaliserte ResNet-18 modell etter 5 epoker:
 
-This enables:
-- Visual interpretation of decisions
-- Failure case analysis
-- Detection of shortcut learning or spurious correlations
+| Metrikk | Verdi |
+| :--- | :--- |
+| **Gjennomsnittlig AUC (14 klasser)** | **0.7683** |
+| **Siste Valideringstap (Loss)** | **0.2900** |
+| **Beste medisinske F1-score (Pleural Effusion)** | **0.74** |
+| **Laveste F1-score (Pneumonia)** | **0.13** |
+
+### Analyse av ytelse
+* **Pleural Effusion (0.74):** Modellen presterer sterkt på klasser med tydelige radiologiske tegn (væskeansamling).
+* **Pneumonia (0.13):** Lungebetennelse viste seg å være mest utfordrende grunnet diffuse visuelle grenser og klasseubalanse. For å kompensere for dette ble terskelverdien for denne klassen senket til **0.05** for å prioritere sensitivitet (Recall) i en klinisk screening-kontekst.
 
 ---
 
+## 🔍 Forklarbarhet og Pålitelighet
+
+### Grad-CAM Visualisering
+Vi benytter **Grad-CAM (Gradient-weighted Class Activation Mapping)** for å generere varmekart. Dette gjør det mulig å verifisere at modellen fokuserer på de anatomisk korrekte områdene i lungene, noe som er essensielt for medisinsk tillit.
+
+### Usikkerhetsestimering (MC Dropout)
+For å unngå "overconfident" feilprediksjoner, utforsket vi **Monte Carlo Dropout** på baseline-modellen. Ved å beholde dropout aktiv under prediksjon, kan vi beregne et standardavvik som indikerer hvor usikker modellen er på diagnosen den stiller.
+
+---
+
+## 🛠 Installasjon og Bruk
+
+1. **Klon repositoriet:**
+   ```bash
+   git clone [https://github.com/brukernavn/DAT255-Chest-Xray.git](https://github.com/brukernavn/DAT255-Chest-Xray.git)
