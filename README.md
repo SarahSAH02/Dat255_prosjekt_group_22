@@ -48,7 +48,7 @@ Følgende resultater ble oppnådd med vår optimaliserte ResNet-18 modell etter 
 
 ### Analyse av ytelse
 * **Pleural Effusion (0.74):** Modellen presterer sterkt på klasser med tydelige radiologiske tegn (væskeansamling).
-* **Pneumonia (0.13):** Lungebetennelse viste seg å være mest utfordrende grunnet diffuse visuelle grenser og klasseubalanse. For å kompensere for dette ble terskelverdien for denne klassen senket til **0.05** for å prioritere sensitivitet (Recall) i en klinisk screening-kontekst.
+* **Pneumonia (0.13):** Lungebetennelse viste seg å være mest utfordrende grunnet diffuse visuelle grenser og klasseubalanse. .
 
 ---
 
