@@ -3,4 +3,3 @@ data/
 outputs/
 *.zip
 *.pt
-*.pth
