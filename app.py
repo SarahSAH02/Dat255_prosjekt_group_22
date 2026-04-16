@@ -27,7 +27,10 @@ class SimpleCNN(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2),
         )
-        self.fc = nn.Linear(32*56*56, 14)
+        self.fc = nn.Sequential(
+            nn.Dropout(p=0.2),
+            nn.Linear(32*56*56, 14)
+        )
 
     def forward(self, x):
         x = self.conv(x)
@@ -42,11 +45,11 @@ def get_resnet():
 @st.cache_resource
 def load_models():
     cnn = SimpleCNN()
-    cnn.load_state_dict(torch.load("models/best_model_cnn.pth", map_location=torch.device('cpu')))
+    cnn.load_state_dict(torch.load("models/cnn.pth", map_location=torch.device('cpu')))
     cnn.eval()
 
     resnet = get_resnet()
-    resnet.load_state_dict(torch.load("models/best_model_resnet.pth", map_location=torch.device('cpu')))
+    resnet.load_state_dict(torch.load("models/resnet18.pth", map_location=torch.device('cpu')))
     resnet.eval()
 
     return cnn, resnet
