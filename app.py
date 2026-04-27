@@ -14,7 +14,7 @@ LABELS = [
     "Lung Opacity", "Lung Lesion", "Edema", "Consolidation",
     "Pneumonia", "Atelectasis", "Pneumothorax", "Pleural Effusion",
     "Pleural Other", "Fracture", "Support Devices"
-]
+] 
 
 def get_efficientnet():
     model = models.efficientnet_b0(weights=None)
