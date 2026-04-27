@@ -88,7 +88,15 @@ For å unngå "overconfident" feilprediksjoner, utforsket vi **Monte Carlo Dropo
    ```
 
 2. **Kjør kommandoen i terminalen:**
+
+   ```bash
    python3.11 -m pip install -r requirements.txt
 
+   ```
+
 3. **Kjøre kommandoen i terminalen for å få opp websiden:**
+
+   ```bash
    streamlit run app.py
+
+   ```
