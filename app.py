@@ -14,45 +14,20 @@ LABELS = [
     "Lung Opacity", "Lung Lesion", "Edema", "Consolidation",
     "Pneumonia", "Atelectasis", "Pneumothorax", "Pleural Effusion",
     "Pleural Other", "Fracture", "Support Devices"
-]
+] 
 
-class SimpleCNN(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(3, 16, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-        )
-        self.fc = nn.Sequential(
-            nn.Dropout(p=0.2),
-            nn.Linear(32*56*56, 14)
-        )
-
-    def forward(self, x):
-        x = self.conv(x)
-        x = x.view(x.size(0), -1)
-        return self.fc(x)
-
-def get_resnet():
-    model = models.resnet18()
-    model.fc = nn.Linear(model.fc.in_features, 14)
+def get_efficientnet():
+    model = models.efficientnet_b0(weights=None)
+    model.classifier[1] = nn.Linear(model.classifier[1].in_features, 14)
     return model
 
 @st.cache_resource
-def load_models():
-    cnn = SimpleCNN()
-    cnn.load_state_dict(torch.load("models/cnn.pth", map_location=torch.device('cpu')))
-    cnn.eval()
+def load_model():
+    efficientnet = get_efficientnet()
+    efficientnet.load_state_dict(torch.load("models/efficientnet.pth", map_location=torch.device('cpu')))
+    efficientnet.eval()
 
-    resnet = get_resnet()
-    resnet.load_state_dict(torch.load("models/resnet18.pth", map_location=torch.device('cpu')))
-    resnet.eval()
-
-    return cnn, resnet
+    return efficientnet
 
 def preprocess(image):
     transform = transforms.Compose([
@@ -69,10 +44,7 @@ def predict(model, tensor):
     return outputs.squeeze().numpy()
 
 def get_gradcam(model, tensor, raw_image, target_class=0):
-    if type(model).__name__=="SimpleCNN":
-        target_layers = [model.conv[-1]]
-    else:
-        target_layers = [model.layer4[-1]]
+    target_layers = [model.features[-1]]
 
     cam = GradCAM(model=model, target_layers=target_layers)
     targets = [ClassifierOutputTarget(target_class)]
@@ -82,52 +54,39 @@ def get_gradcam(model, tensor, raw_image, target_class=0):
     visualization = show_cam_on_image(raw, grayscale_cam, use_rgb=True)
     return Image.fromarray(visualization)
 
-# Streamlit
-st.set_page_config(page_title="Disease detection for chest X-ray", layout="wide")
-st.title("Disease detection for chest X-ray")
+#Streamlit
+st.set_page_config(page_title="Disease Detection for Chest X-ray", layout="wide")
+st.title("Disease Detection for Chest X-ray")
 st.write("Upload a chest x-ray and get a diagnosis")
 
-model_cnn, model_resnet = load_models()
+model_efficientnet = load_model()
 
-model_choice = st.radio("Choose model:", ["CNN", "ResNet18", "Both"])
 diagnose = st.button("Click to diagnose")
-uploaded_file = st.file_uploader("Upload x-ray image", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload x-ray image", type=["jpg", "jpeg", "png", "webp"])
 
 if uploaded_file and diagnose:
     image = Image.open(uploaded_file).convert("RGB")
     tensor = preprocess(image)
 
-    preds_cnn = predict(model_cnn, tensor) if model_choice in ["CNN", "Both"] else None
-    preds_resnet = predict(model_resnet, tensor) if model_choice in ["ResNet18", "Both"] else None
+    preds_efficientnet = predict(model_efficientnet, tensor)
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
+        st.subheader("Uploaded X-ray")
         st.image(image, caption="Uploaded x-ray", width='stretch')
 
-        if model_choice in ["CNN", "Both"]:
-            top_class_cnn = int(np.argmax(preds_cnn))
-            gradcam_image = get_gradcam(model_cnn, tensor, image, target_class=top_class_cnn)
-            st.subheader("Grad-CAM Heatmap (CNN)")
-            st.image(gradcam_image, caption=f"Focus area for: {LABELS[top_class_cnn]}", width='stretch')
-
-        if model_choice in ["ResNet18", "Both"]:
-            top_class_resnet = int(np.argmax(preds_resnet))
-            gradcam_image = get_gradcam(model_resnet, tensor, image, target_class=top_class_resnet)
-            st.subheader("Grad-CAM Heatmap (ResNet18)")
-            st.image(gradcam_image, caption=f"Focus area for: {LABELS[top_class_resnet]}", width='stretch')
-
     with col2:
+        top_class = int(np.argmax(preds_efficientnet))
+        gradcam_image = get_gradcam(model_efficientnet, tensor, image, target_class=top_class)
+        st.subheader("Grad-CAM Heatmap")
+        st.image(gradcam_image, caption=f"Focus area for: {LABELS[top_class]}", width='stretch')
+        
+    with col3:  
         st.subheader("Results")
-
-        if model_choice in ["CNN", "Both"]:
-            st.markdown("<p style='font-size:20px'><b>CNN Model:</b></p>", unsafe_allow_html=True)
-            sorted_results = sorted(zip(LABELS, preds_cnn), key=lambda x: x[1], reverse=True)
-            for label, score in sorted_results:
-                st.markdown(f"<p style='font-size:18px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
-
-        if model_choice in ["ResNet18", "Both"]:
-            st.markdown("<p style='font-size:20px'><b>ResNet18:</b></p>", unsafe_allow_html=True)
-            sorted_results = sorted(zip(LABELS, preds_resnet), key=lambda x: x[1], reverse=True)
-            for label, score in sorted_results:
+        sorted_results = sorted(zip(LABELS, preds_efficientnet), key=lambda x: x[1], reverse=True)
+        for i, (label, score) in enumerate(sorted_results):
+            if i == 0:
+                st.markdown(f"<p style='font-size:18px; background-color:#acd8a7; padding:8px; border-radius:5px;'><b> {label.upper()}: {score:.1%}</b></p>", unsafe_allow_html=True)
+            else:
                 st.markdown(f"<p style='font-size:18px'>- {label}: {score:.1%}</p>", unsafe_allow_html=True)
