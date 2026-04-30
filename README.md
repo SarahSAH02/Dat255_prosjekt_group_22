@@ -83,17 +83,28 @@ Vi har utviklet en webapplikasjon med **Streamlit** hvor brukeren kan:
 ![App Demo](outputs/demo.gif)
 ---
 
-## 📁 Prosjektstruktur:
+## 📁 Prosjektstruktur
 
-Dat255_prosjekt/
-│
-├── app.py              # Streamlit-applikasjon
-├── models/             # Lagrede modeller (.pth)
-├── notebooks/          # Trening og eksperimenter
-├── outputs/            # Figurer, plots og resultater
-├── data/               # (valgfritt) datastruktur / CSV-filer
-├── README.md
-└── requirements.txt
+- `app.py`  
+  → Streamlit-applikasjon
+
+- `models/`  
+  → Lagrede modeller (.pth)
+
+- `notebooks/`  
+  → Trening og eksperimenter
+
+- `outputs/`  
+  → Figurer, plots og resultater
+
+- `data/` *(valgfritt)*  
+  → Datastruktur / CSV-filer
+
+- `README.md`  
+  → Prosjektbeskrivelse
+
+- `requirements.txt`  
+  → Avhengigheter
 
 --- 
 ### ⚠️ Viktig
