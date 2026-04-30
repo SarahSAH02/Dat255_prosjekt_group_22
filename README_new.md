@@ -79,8 +79,9 @@ Vi har utviklet en webapplikasjon med **Streamlit** hvor brukeren kan:
 ## 🎥 Demo
 
 *(legg inn gif/video her)*
-```
-![Demo](outputs/demo.gif)
+
+![App Demo](outputs/demo.gif)
+
 ```
 ---
 
