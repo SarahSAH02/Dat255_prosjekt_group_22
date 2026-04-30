@@ -80,7 +80,6 @@ Vi har utviklet en webapplikasjon med **Streamlit** hvor brukeren kan:
 
 *(legg inn gif/video her)*
 
-```markdown
 ![Demo](outputs/demo.gif)
 
 ---
