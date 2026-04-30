@@ -88,3 +88,8 @@ git clone https://github.com/brukernavn/DAT255-Chest-Xray.git
 cd DAT255-Chest-Xray
 pip install -r requirements.txt
 streamlit run app.py
+
+```
+⚠️ Viktig
+
+Kun for læring – ikke til medisinsk bruk!
