@@ -3,7 +3,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 
-Dette prosjektet utforsker bruk av dyplæring for automatisk klassifisering av thorax-patologier fra røntgenbilder. Målet er å utvikle et system som kan predikere flere sykdommer samtidig (multi-label) og samtidig gi innsikt i modellens beslutninger gjennom forklarbarhet.
+Dette prosjektet utforsker bruk av dyplæring for automatisert diagnostisering av thorax-patologier fra røntgenbilder. Ved å kombinere moderne nevrale nettverk med forklarbarhet og usikkerhetsestimering, har vi utviklet et system som gir innsikt i AI-basert diagnostikk.
 
 ---
 
@@ -16,46 +16,51 @@ Dette prosjektet utforsker bruk av dyplæring for automatisk klassifisering av t
 
 ---
 
-## 📊 Dataset
+## 🌐 Webapplikasjon
 
-Vi benytter en kuratert versjon av **CheXpert-datasettet** fra Kaggle (`ashery/chexpert`).
+For å demonstrere modellens praktiske anvendelse har vi utviklet en interaktiv webapplikasjon ved hjelp av **Streamlit**.
 
-- ~200k røntgenbilder  
-- Multi-label annotasjoner  
-- Inneholder usikre labels  
+Applikasjonen lar brukeren:
+- laste opp et bryst-røntgenbilde  
+- motta prediksjoner for 14 sykdomsklasser  
+- se sannsynligheter per klasse  
+- visualisere modellens fokusområder med Grad-CAM  
 
-Datasettet er splittet slik at pasienter ikke overlapper:
+Den ferdig trente modellen lastes fra en `.pth`-fil og brukes til sanntids inferens.
 
-- **Train (80%)**
-- **Validation (10%)**
-- **Test (10%)**
+### 📸 Demo
 
----
-
-## 🧠 Modeller
-
-Vi har eksperimentert med flere modeller:
-
-- **SimpleCNN (baseline)**
-- **ResNet-18 (hovedmodell)**
-- **DenseNet121 (eksperimentell)**
-
-Alle modellene håndterer multi-label klassifisering med `BCEWithLogitsLoss`.
+![Web App Demo](DAT255_website.png)
 
 ---
 
-## ⚖️ Modellvalg
+## 📊 Datasett og Metodikk
 
-Flere modeller ga sammenlignbar ytelse, men **ResNet-18** ble valgt som hovedmodell.
+### Datakilde (Kaggle)
 
-Valget er basert på:
+Vi har benyttet en kuratert versjon av **CheXpert**-datasettet fra Kaggle (`ashery/chexpert`).
 
-- stabil og konsistent ytelse  
-- god balanse mellom kompleksitet og resultat  
-- enklere og mer robust treningsprosess  
-- bedre integrasjon i vår pipeline  
+### Oppsplitting av data
 
-Dette reflekterer et bevisst valg hvor vi prioriterer **robusthet og konsistens**, ikke kun høyeste metrikk.
+Datasettet er splittet slik at ingen pasient-ID overlapper:
+
+- **Treningssett (80%)**
+- **Valideringssett (10%)**
+- **Testsett (10%)**
+
+---
+
+## 🧠 Modellarkitektur
+
+Vi har implementert og sammenlignet to tilnærminger:
+
+1. **SimpleCNN (Baseline)**  
+   - Egenutviklet modell  
+   - Brukt til å utforske *Monte Carlo Dropout*  
+
+2. **ResNet-18 (Hovedmodell)**  
+   - Transfer learning fra ImageNet  
+   - Multi-label klassifisering med `BCEWithLogitsLoss`  
 
 ---
 
@@ -68,54 +73,35 @@ Dette reflekterer et bevisst valg hvor vi prioriterer **robusthet og konsistens*
 | Beste F1-score                      | 0.74      |
 | Laveste F1-score                    | 0.13      |
 
-**Observasjoner:**
-- Modellen presterer best på tydelige patologier (f.eks. pleural effusion)
-- Vanskeligere klasser skyldes ofte **klasseubalanse og diffuse mønstre**
+### Analyse
+
+- Sterk ytelse på tydelige patologier (f.eks. pleural effusion)  
+- Lavere ytelse på diffuse tilstander (f.eks. pneumonia)  
 
 ---
 
-## 🔍 Forklarbarhet og Usikkerhet
+## 🔍 Forklarbarhet og Pålitelighet
 
 ### Grad-CAM
 
-Vi bruker **Grad-CAM** for å visualisere hvor modellen fokuserer i bildet.
+Vi benytter Grad-CAM for å visualisere hvilke områder modellen fokuserer på.
 
-Dette gjør det mulig å:
-- verifisere medisinsk relevante områder  
-- øke transparens  
-- identifisere feilaktig fokus  
-
----
-
-### Monte Carlo Dropout
-
-Vi utforsker også **MC Dropout** for å estimere modellens usikkerhet ved prediksjon.
+| Pleural Effusion | Pneumonia |
+|-----------------|----------|
+| ![Pleural Effusion](Pleural%20effusion.png) | ![Pneumonia](phen.png) |
 
 ---
 
-## 🌐 Webapplikasjon
+### Usikkerhetsestimering (MC Dropout)
 
-Vi har utviklet en interaktiv webapplikasjon med **Streamlit**.
-
-Applikasjonen lar brukeren:
-
-- laste opp et røntgenbilde  
-- få prediksjoner for alle klasser  
-- se sannsynligheter per sykdom  
-- visualisere modellens fokus med Grad-CAM  
-
-Modellen lastes fra en `.pth`-fil og brukes til sanntids inferens.
+Vi utforsket Monte Carlo Dropout for å estimere modellens usikkerhet og redusere overkonfidente prediksjoner.
 
 ---
 
-## 📁 Prosjektstruktur
+## 🛠 Installasjon og bruk
+
+### 1. Klon repositoriet
 
 ```bash
-DAT255_prosjekt/
-├── data/
-├── models/
-├── notebooks/
-├── outputs/
-├── app.py
-├── requirements.txt
-└── README.md
+git clone https://github.com/brukernavn/DAT255-Chest-Xray.git
+cd DAT255-Chest-Xray
