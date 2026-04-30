@@ -1,8 +1,6 @@
-# 🫁 Multi-label sykdomsdeteksjon i brystrøntgenbilder
+# Multi-Label Classification of Chest X-rays
 
-Dette prosjektet er utviklet som en del av **DAT255 – Deep Learning Engineering** ved HVL.
-
-Målet med prosjektet er å utvikle og evaluere dyp læringsmodeller for **multi-label klassifikasjon av brystrøntgenbilder**, basert på **CheXpert-datasettet**. Systemet predikerer flere patologier fra ett enkelt bilde, og utforsker hvordan modellvalg, terskeloptimalisering og forklarbarhet påvirker ytelsen.
+Dette prosjektet er utviklet i **DAT255 – Deep Learning Engineering** og undersøker hvordan dyp læring kan brukes til å klassifisere flere patologier fra brystrøntgenbilder (multi-label classification).
 
 ---
 
@@ -15,70 +13,29 @@ Målet med prosjektet er å utvikle og evaluere dyp læringsmodeller for **multi
 
 ---
 
-## 📌 Problemstilling
-
-Prosjektet undersøker følgende:
-
-Hvordan påvirker modellarkitekturens kompleksitet klassifisering av patologier i brystrøntgenbilder sammenlignet med en enklere egenutviklet modell, og hvordan kan terskel optimalisering bidra til mer robuste prediksjoner i et ubalansert datasett?
-
-Modellen predikerer totalt **14 patologiklasser** fra brystrøntgenbilder.
-
----
-
 ## 📊 Datasett
 
-Vi benytter en kuratert versjon av **CheXpert**-datasettet (`ashery/chexpert` fra Kaggle).
+Vi benytter en kuratert versjon av **CheXpert-datasettet** fra Kaggle.
 
-### Egenskaper
+- Multi-label klassifikasjon (14 klasser)  
+- Ubalansert datasett  
+- Inneholder usikre annotasjoner  
 
-- Multi-label datasett (14 klasser)
-- Inneholder usikre annotasjoner (-1)
-- Betydelig klasseubalanse
-
-### Databehandling
-
-- Usikre verdier (-1) og manglende verdier behandles som **negative (0)**
-- Datasplitting (på pasient-ID for å unngå data leakage):
-  - Treningssett: ~80%
-  - Valideringssett: ~10%
-  - Testsett: ~10%
+Datasettet er splittet i:
+- Train (80%)  
+- Validation (10%)  
+- Test (10%)  
 
 ---
 
-## ⚙️ Metode
+## 🧠 Modeller
 
-### Modeller
+Vi har eksperimentert med:
 
-Vi har implementert og sammenlignet følgende modeller:
-
-- **Baseline CNN** (egenutviklet modell)
-- **ResNet18** (transfer learning)
-- **DenseNet121** (transfer learning)
-- **EfficientNet-B0** (transfer learning)
-
-Alle modellene er tilpasset en **multi-label klassifikasjonsoppgave**.
-
----
-
-### Treningsoppsett
-
-- Tapsfunksjon: `BCEWithLogitsLoss`
-- Optimalisering: **AdamW**
-- Læringsrate: `1e-4`
-- Weight decay: `1e-4`
-- Inputstørrelse: `224x224`
-
-### Datapreprosessering
-
-- Resize til 224×224
-- Normalisering (ImageNet)
-- Konvertering til tensor
-
-### Dataaugmentering (kun trening)
-
-- Random crop
-- Horisontal speiling
-- Rotasjon
+- Baseline CNN  
+- ResNet18  
+- DenseNet121  
+- EfficientNet-B0  
 
 ---
 
@@ -88,50 +45,50 @@ Alle modellene er tilpasset en **multi-label klassifikasjonsoppgave**.
 |------------------|---------|----------|
 | Baseline CNN     | 0.6668  | 0.2790   |
 | ResNet18         | 0.7752  | 0.3926   |
-| DenseNet121      | ~0.78   | **0.4100** |
+| DenseNet121      | ~0.78   | 0.4100   |
 | EfficientNet-B0  | **0.7889** | ~0.40 |
 
-### Viktige observasjoner
+👉 **EfficientNet-B0 oppnådde best total ytelse**, spesielt målt med ROC-AUC.
 
-- Transfer learning gir betydelig bedre ytelse enn baseline-modellen
-- EfficientNet-B0 og DenseNet121 presterer best totalt
-- Enkelte klasser (f.eks. Pneumonia) er vanskelig å klassifisere
-- **Terskeloptimalisering** forbedrer balansen mellom presisjon og recall
+Observasjoner:
+- Transfer learning gir betydelig bedre resultater  
+- Enkelte klasser (f.eks. Pneumonia) er fortsatt utfordrende  
+- Terskeloptimalisering forbedrer prediksjoner  
 
 ---
 
 ## 🔍 Forklarbarhet
 
-Vi benytter **Grad-CAM** for å visualisere modellens beslutninger.
+Vi bruker **Grad-CAM** for å visualisere hvilke områder i bildet modellen fokuserer på.
 
-- Viser hvilke områder i bildet modellen fokuserer på
-- Bidrar til økt transparens
-- Gir innsikt i om modellen baserer seg på relevante anatomiske strukturer
-
----
-
-## 🌐 Webapplikasjon (Deployment)
-
-Modellen er deployet som en interaktiv webapplikasjon ved hjelp av **Streamlit**.
-
-### Funksjonalitet
-
-- Last opp brystrøntgenbilde
-- Få prediksjoner for 14 patologiklasser
-- Se sannsynligheter per klasse
-- Visualiser modellens fokus med Grad-CAM
-
-### Teknisk løsning
-
-- Modellen lagres som `.pth`-fil
-- Lastes inn ved oppstart av applikasjonen
-- Input preprocesseres likt som under trening
-- Prediksjoner genereres i sanntid
+| Pleural Effusion | Pneumonia |
+|-----------------|----------|
+| ![Pleural Effusion](outputs/pleural_effusion.png) | ![Pneumonia](outputs/pneumonia.png) |
 
 ---
 
-## 📸 Demo
+## 🌐 Webapplikasjon
 
+Vi har utviklet en webapplikasjon med **Streamlit** hvor brukeren kan:
+
+- laste opp røntgenbilder  
+- få prediksjoner for alle klasser  
+- se sannsynligheter  
+- visualisere Grad-CAM heatmaps
+
+## 🎥 Demo
+
+*(legg inn gif/video her)*
 
 ```markdown
-![Web App Demo](outputs/demo.png)
+![Demo](outputs/demo.gif)
+
+---
+
+## 🛠 Kjør prosjektet
+
+```bash
+git clone https://github.com/brukernavn/DAT255-Chest-Xray.git
+cd DAT255-Chest-Xray
+pip install -r requirements.txt
+streamlit run app.py
