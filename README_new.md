@@ -61,9 +61,9 @@ Observasjoner:
 
 Vi bruker **Grad-CAM** for å visualisere hvilke områder i bildet modellen fokuserer på.
 
-| Pleural Effusion | Pneumonia |
+| Atelectasis | Pneumonia |
 |-----------------|----------|
-| ![Pleural Effusion](outputs/pleural_effusion.png) | ![Pneumonia](outputs/pneumonia.png) |
+| ![Atelectasis](outputs/atelectasis.png) | ![Pneumonia](outputs/pneumonia.png) |
 
 ---
 
