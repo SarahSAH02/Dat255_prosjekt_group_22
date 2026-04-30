@@ -1,4 +1,4 @@
-# Multi-Label Classification of Chest X-rays
+# Detect disease in chest X-rays images
 
 Dette prosjektet er utviklet i **DAT255 – Deep Learning Engineering** og undersøker hvordan dyp læring kan brukes til å klassifisere flere patologier fra brystrøntgenbilder (multi-label classification).
 
