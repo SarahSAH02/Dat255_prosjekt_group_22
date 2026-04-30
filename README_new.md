@@ -75,14 +75,10 @@ Vi har utviklet en webapplikasjon med **Streamlit** hvor brukeren kan:
 - få prediksjoner for alle klasser  
 - se sannsynligheter  
 - visualisere Grad-CAM heatmaps
-
+  
+---
 ## 🎥 Demo
-
-*(legg inn gif/video her)*
-
 ![App Demo](outputs/demo.gif)
-
-```
 ---
 
 ## 🛠 Kjør prosjektet
