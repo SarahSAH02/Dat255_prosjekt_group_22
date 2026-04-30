@@ -78,7 +78,7 @@ Vi har utviklet en webapplikasjon med **Streamlit** hvor brukeren kan:
   
 ---
 ## 🎥 Demo
-![App Demo](outputs/demo.mp4)
+![App Demo](outputs/demo.gif)
 ---
 
 ## 🛠 Kjør prosjektet
